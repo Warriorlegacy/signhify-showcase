@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Burrow — Modular Sofa Configurator | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f4f1ea;color:#1d1a16}
+  header{background:#2e2a25;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header b{font-size:17px} header span{font-size:12px;opacity:.8}
+  main{max-width:980px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px} p.sub{color:#5a534a;margin:0 0 14px}
+  #scene{width:100%;height:440px;border-radius:12px;background:#e9e4d8;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .panel{background:#fff;border:1px solid #ddd6c8;border-radius:12px;padding:14px;margin-top:14px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{border:1px solid #2e2a25;background:#fff;color:#2e2a25;border-radius:999px;padding:8px 14px;cursor:pointer;font-size:14px}
+  .btn.active{background:#2e2a25;color:#fff}
+  .swatch{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #bbb;cursor:pointer}
+  .swatch.active{box-shadow:0 0 0 2px #2e2a25}
+  .price{font-size:22px;font-weight:700}
+  .note{font-size:12px;color:#6b6357;margin-top:10px}
+  footer{max-width:980px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#6b6357}
+  a{color:#2e2a25}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><b>Burrow &times; Signhify Studio</b><span>Concept sample &mdash; interactive 3D configurator</span></header>
+<main>
+  <h1>Build your modular sofa</h1>
+  <p class="sub">Drag to rotate. Pick a layout and a fabric &mdash; the price updates live. Burrow&rsquo;s sofas ship in modules and assemble tool-free.</p>
+  <div id="scene"></div>
+  <div class="panel">
+    <div class="row" id="layouts">
+      <button class="btn active" data-layout="2">2-Seat</button>
+      <button class="btn" data-layout="3">3-Seat</button>
+      <button class="btn" data-layout="3c">3-Seat + Chaise</button>
+      <button class="btn" data-layout="2o">2-Seat + Ottoman</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <span>Fabric:</span>
+      <button class="swatch active" data-color="0xe8e4dc" data-name="Nomad Snow" style="background:#e8e4dc" title="Nomad Snow"></button>
+      <button class="swatch" data-color="0x3a3a3a" data-name="Charcoal" style="background:#3a3a3a" title="Charcoal"></button>
+      <button class="swatch" data-color="0x4a5d4e" data-name="Forest" style="background:#4a5d4e" title="Forest"></button>
+      <button class="swatch" data-color="0xb4654a" data-name="Terracotta" style="background:#b4654a" title="Terracotta"></button>
+      <span id="fabricName">Nomad Snow</span>
+    </div>
+    <div class="row" style="margin-top:14px;justify-content:space-between">
+      <span>Estimated price <span class="price" id="price">$1,095</span></span>
+      <span id="dims">2 seats &middot; 66&quot; wide &middot; tool-free assembly</span>
+    </div>
+    <p class="note">Indicative pricing for the concept only. Modules shown: seat units, back cushions, arms, chaise and ottoman &mdash; the same modular system Burrow sells, rendered in real-time 3D at 60 FPS.</p>
+  </div>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org" target="_blank" rel="noopener">Signhify Studio</a> for Burrow. Independent concept &mdash; not affiliated with or endorsed by Burrow. Portfolio: <a href="https://piyush-portfolio-ebon.vercel.app" target="_blank" rel="noopener">piyush-portfolio-ebon.vercel.app</a></footer>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, 440);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xe9e4d8);
+const camera = new THREE.PerspectiveCamera(42, container.clientWidth/440, 0.1, 100);
+camera.position.set(3.4, 2.4, 4.2);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.5, 0); controls.enableDamping = true; controls.maxPolarAngle = Math.PI/2.05;
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(4, 6, 3); sun.castShadow = true; scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(12,12), new THREE.MeshStandardMaterial({color:0xd8d2c2, roughness:1}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+const fabric = new THREE.MeshStandardMaterial({ color:0xe8e4dc, roughness:0.95 });
+const legMat = new THREE.MeshStandardMaterial({ color:0x8a6a4f, roughness:0.6 });
+const sofa = new THREE.Group(); scene.add(sofa);
+function box(w,h,d,x,y,z,mat,fabricMat){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat || fabricMat || fabric);
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; sofa.add(m); return m;
+}
+const PRICES = { '2':[1095,'2 seats · 66" wide · tool-free assembly'], '3':[1395,'3 seats · 86" wide · tool-free assembly'], '3c':[1890,'3 seats + chaise · 86" × 61" · tool-free assembly'], '2o':[1390,'2 seats + ottoman · 66" wide · tool-free assembly'] };
+function build(layout){
+  while (sofa.children.length) sofa.remove(sofa.children[0]);
+  const n = layout.startsWith('3') ? 3 : 2;
+  const w = n * 1.0, x0 = -(w/2) + 0.5;
+  for (let i=0;i<n;i++){
+    box(0.96,0.32,0.95, x0+i*1.0, 0.42, 0, fabric);            // seat
+    const back = box(0.96,0.62,0.22, x0+i*1.0, 0.86, -0.38, fabric); back.rotation.x = -0.1; // back cushion
+    box(0.96,0.10,0.95, x0+i*1.0, 0.24, 0, legMat);           // base
+  }
+  box(0.22,0.55,0.95, x0-0.61, 0.55, 0, fabric);              // left arm
+  box(0.22,0.55,0.95, x0+(n-1)*1.0+0.61, 0.55, 0, fabric);    // right arm
+  if (layout === '3c'){                                        // chaise on the right
+    box(0.96,0.32,1.5, x0+2*1.0, 0.42, 0.55, fabric);
+    box(0.96,0.10,1.5, x0+2*1.0, 0.24, 0.55, legMat);
+  }
+  if (layout === '2o'){                                        // ottoman in front
+    box(0.9,0.3,0.6, 0.4, 0.4, 1.05, fabric);
+    box(0.9,0.08,0.6, 0.4, 0.22, 1.05, legMat);
+  }
+  for (let i=0;i<4;i++) box(0.09,0.18,0.09, -w/2+0.25+i*(w-0.5)/3, 0.09, i%2? 0.4 : -0.4, legMat);
+  document.getElementById('price').textContent = '$' + PRICES[layout][0].toLocaleString();
+  document.getElementById('dims').textContent = PRICES[layout][1];
+}
+build('2');
+document.querySelectorAll('#layouts .btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#layouts .btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); build(b.dataset.layout);
+}));
+document.querySelectorAll('.swatch').forEach(s => s.addEventListener('click', () => {
+  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+  s.classList.add('active');
+  fabric.color.setHex(parseInt(s.dataset.color));
+  document.getElementById('fabricName').textContent = s.dataset.name;
+}));
+function resize(){ const w = container.clientWidth; renderer.setSize(w,440); camera.aspect = w/440; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+(function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); })();
+</script>
+</body>
+</html>

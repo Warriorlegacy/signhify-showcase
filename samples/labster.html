@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labster — Virtual Lab + AI Tutor | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f2f5f9;color:#16202e}
+  header{background:#0b3d5c;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header b{font-size:17px} header span{font-size:12px;opacity:.8}
+  main{max-width:980px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px} p.sub{color:#5a6b7d;margin:0 0 14px}
+  #scene{width:100%;height:400px;border-radius:12px;background:#dde5ec;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media (max-width:640px){.grid{grid-template-columns:1fr}}
+  .panel{background:#fff;border:1px solid #d5dde6;border-radius:12px;padding:14px}
+  .panel h3{margin:0 0 8px;font-size:15px}
+  .hot{border:1px solid #0b3d5c;background:#fff;color:#0b3d5c;border-radius:999px;padding:7px 12px;cursor:pointer;font-size:13px;margin:0 6px 6px 0}
+  .hot.active{background:#0b3d5c;color:#fff}
+  .q{border:1px solid #0b3d5c;background:#eef4f8;color:#0b3d5c;border-radius:8px;padding:8px 10px;cursor:pointer;font-size:13px;margin-top:6px;width:100%;text-align:left}
+  .q:hover{background:#dbe9f2}
+  #answer{font-size:14px;line-height:1.5;margin-top:8px}
+  .note{font-size:12px;color:#7a8a99;margin-top:10px}
+  footer{max-width:980px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#7a8a99}
+  a{color:#0b3d5c}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><b>Labster &times; Signhify Studio</b><span>Concept sample &mdash; virtual lab + AI tutor</span></header>
+<main>
+  <h1>A lab bench students can walk around</h1>
+  <p class="sub">Drag to rotate. Click a hotspot to inspect the equipment, then ask the AI tutor about the experiment &mdash; the same 3D + AI pairing Labster&rsquo;s 300+ simulations are built on.</p>
+  <div id="scene"></div>
+  <div class="grid">
+    <div class="panel">
+      <h3>Inspect the bench</h3>
+      <button class="hot active" data-item="microscope">Microscope</button>
+      <button class="hot" data-item="beaker">Beaker</button>
+      <button class="hot" data-item="burner">Bunsen burner</button>
+      <button class="hot" data-item="flask">Erlenmeyer flask</button>
+      <p id="inspect" style="font-size:14px;line-height:1.5">The compound microscope magnifies up to 1000&times;. In this simulation students focus the sample themselves &mdash; a wrong focus blurs the cells, exactly like the real bench.</p>
+    </div>
+    <div class="panel">
+      <h3>AI tutor &mdash; ask about the experiment</h3>
+      <button class="q" data-a="The sample is cheek epithelial cells. You will see a nucleus, cytoplasm and a cell membrane. Focus slowly — if the image goes dark, you have overshot the focal plane.">What will I see under the microscope?</button>
+      <button class="q" data-a="We heat the solution to 60°C to speed up the reaction without denaturing the enzyme. Above 70°C the enzyme unfolds and the reaction stops — try it and watch the rate fall.">Why do we heat the solution?</button>
+      <button class="q" data-a="Measure twice, pour once. The simulation flags any volume over 50 ml in the 100 ml beaker, and the tutor explains why the meniscus reading matters for your results.">How do I avoid a measurement error?</button>
+      <p id="answer">Pick a question above &mdash; the tutor answers from the lab script. (Rule-based demo: no model call, no student data.)</p>
+    </div>
+  </div>
+  <p class="note">Concept visualisation with stylised geometry and scripted tutor answers &mdash; not Labster&rsquo;s own simulation content. Labster&rsquo;s simulations are used by Harvard, MIT, Stanford and Berkeley, and by partners including Google and Arizona State University.</p>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org" target="_blank" rel="noopener">Signhify Studio</a> for Labster. Independent concept &mdash; not affiliated with or endorsed by Labster. Portfolio: <a href="https://piyush-portfolio-ebon.vercel.app" target="_blank" rel="noopener">piyush-portfolio-ebon.vercel.app</a></footer>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, 400);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xdde5ec);
+const camera = new THREE.PerspectiveCamera(42, container.clientWidth/400, 0.1, 100);
+camera.position.set(2.8, 2.0, 3.4);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.5, 0); controls.enableDamping = true; controls.maxPolarAngle = Math.PI/2.05;
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const sun = new THREE.DirectionalLight(0xffffff, 1.3);
+sun.position.set(4, 6, 3); sun.castShadow = true; scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(12,12), new THREE.MeshStandardMaterial({color:0xc9d2da, roughness:1}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+const benchMat = new THREE.MeshStandardMaterial({ color:0x8b9aa8, roughness:0.5, metalness:0.2 });
+const bench = new THREE.Mesh(new THREE.BoxGeometry(3.2,0.12,1.4), benchMat);
+bench.position.set(0,0.85,0); bench.castShadow = true; bench.receiveShadow = true; scene.add(bench);
+[[-1.5,-0.6],[1.5,-0.6],[-1.5,0.6],[1.5,0.6]].forEach(([x,z]) => {
+  const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.85,0.1), benchMat);
+  leg.position.set(x,0.42,z); leg.castShadow = true; scene.add(leg);
+});
+const glass = new THREE.MeshStandardMaterial({ color:0x9fd8e8, roughness:0.15, metalness:0.1, transparent:true, opacity:0.75 });
+const metal = new THREE.MeshStandardMaterial({ color:0x3a4750, roughness:0.35, metalness:0.7 });
+const liquid = new THREE.MeshStandardMaterial({ color:0x3f9e63, roughness:0.2, transparent:true, opacity:0.85 });
+// microscope (left)
+const micro = new THREE.Group(); micro.position.set(-1.0, 0.91, 0); scene.add(micro);
+const mBase = new THREE.Mesh(new THREE.BoxGeometry(0.34,0.06,0.24), metal); mBase.position.y = 0.03; mBase.castShadow = true; micro.add(mBase);
+const mArm = new THREE.Mesh(new THREE.BoxGeometry(0.07,0.5,0.07), metal); mArm.position.set(-0.12,0.3,0); mArm.castShadow = true; micro.add(mArm);
+const mTube = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.06,0.42,16), metal); mTube.rotation.z = 0.5; mTube.position.set(0.02,0.52,0); mTube.castShadow = true; micro.add(mTube);
+const mStage = new THREE.Mesh(new THREE.BoxGeometry(0.22,0.03,0.22), metal); mStage.position.set(0.08,0.28,0); micro.add(mStage);
+// beaker (centre)
+const beaker = new THREE.Group(); beaker.position.set(-0.1, 0.91, 0.15); scene.add(beaker);
+const bCup = new THREE.Mesh(new THREE.CylinderGeometry(0.16,0.14,0.34,20,1,true), glass); bCup.position.y = 0.17; bCup.castShadow = true; beaker.add(bCup);
+const bLiq = new THREE.Mesh(new THREE.CylinderGeometry(0.145,0.13,0.16,20), liquid); bLiq.position.y = 0.09; beaker.add(bLiq);
+const bBase = new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,0.02,20), glass); bBase.position.y = 0.01; beaker.add(bBase);
+// bunsen burner (right) with flame
+const burner = new THREE.Group(); burner.position.set(0.75, 0.91, -0.2); scene.add(burner);
+const bStem = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,0.3,12), metal); bStem.position.y = 0.15; bStem.castShadow = true; burner.add(bStem);
+const bFoot = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.13,0.04,16), metal); bFoot.position.y = 0.02; burner.add(bFoot);
+const flame = new THREE.Mesh(new THREE.ConeGeometry(0.07,0.28,12), new THREE.MeshStandardMaterial({ color:0xffa726, emissive:0xff6d00, emissiveIntensity:1.4 }));
+flame.position.y = 0.44; burner.add(flame);
+// erlenmeyer flask (right)
+const flask = new THREE.Group(); flask.position.set(1.25, 0.91, 0.3); scene.add(flask);
+const fBody = new THREE.Mesh(new THREE.ConeGeometry(0.17,0.3,20), glass); fBody.position.y = 0.15; fBody.castShadow = true; flask.add(fBody);
+const fNeck = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,0.18,12), glass); fNeck.position.y = 0.38; flask.add(fNeck);
+const fLiq = new THREE.Mesh(new THREE.ConeGeometry(0.14,0.12,20), new THREE.MeshStandardMaterial({color:0x7c5cd6, roughness:0.2, transparent:true, opacity:0.85})); fLiq.position.y = 0.07; flask.add(fLiq);
+const INFO = {
+  microscope: 'The compound microscope magnifies up to 1000×. In this simulation students focus the sample themselves — a wrong focus blurs the cells, exactly like the real bench.',
+  beaker: 'The 100 ml beaker holds the reaction mixture. Students read the meniscus at eye level; the simulation flags parallax errors and explains the correction.',
+  burner: 'The Bunsen burner heats the solution to 60°C. The flame colour tells students the air hole setting — blue for a hot, clean flame, yellow for a cooler, sooty one.',
+  flask: 'The Erlenmeyer flask is where the titration happens. Its narrow neck limits splashing, and the purple indicator flips colour at the endpoint — the moment students are scored on.'
+};
+document.querySelectorAll('.hot').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.hot').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('inspect').textContent = INFO[b.dataset.item];
+}));
+document.querySelectorAll('.q').forEach(b => b.addEventListener('click', () => {
+  document.getElementById('answer').textContent = b.dataset.a;
+}));
+function resize(){ const w = container.clientWidth; renderer.setSize(w,400); camera.aspect = w/400; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+(function animate(t){
+  requestAnimationFrame(animate);
+  flame.scale.y = 1 + Math.sin((t||0)/180) * 0.15;
+  controls.update(); renderer.render(scene, camera);
+})();
+</script>
+</body>
+</html>

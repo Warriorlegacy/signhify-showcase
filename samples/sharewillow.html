@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ShareWillow — Willow Agent Console | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0f172a;color:#e2e8f0}
+  header{background:#111c33;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-bottom:1px solid #1e293b}
+  header b{font-size:17px} header span{font-size:12px;opacity:.75}
+  main{max-width:1020px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px;color:#fff} p.sub{color:#94a3b8;margin:0 0 14px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+  .card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:14px}
+  .card h3{margin:0 0 8px;font-size:15px;color:#fff}
+  .stat{display:flex;justify-content:space-between;font-size:14px;padding:5px 0;border-bottom:1px dashed #334155}
+  .stat:last-child{border-bottom:0}
+  .stat b{color:#fff}
+  .good{color:#4ade80}.warn{color:#facc15}.bad{color:#f87171}
+  .agent{background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius:12px;padding:14px;margin-top:12px}
+  .agent h3{margin:0 0 6px;color:#fff}
+  .agent p{margin:4px 0;font-size:14px}
+  .pill{display:inline-block;background:rgba(255,255,255,.18);border-radius:999px;padding:3px 10px;font-size:12px;margin-right:6px}
+  input[type=range]{width:100%}
+  .big{font-size:26px;font-weight:700;color:#fff}
+  .feed{margin-top:12px}
+  .feed div{background:#1e293b;border:1px solid #334155;border-radius:10px;padding:10px 12px;margin-top:8px;font-size:14px}
+  .note{font-size:12px;color:#64748b;margin-top:12px}
+  footer{max-width:1020px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#64748b}
+  a{color:#93c5fd}
+</style>
+</head>
+<body>
+<header><b>ShareWillow &times; Signhify Studio</b><span>Concept sample &mdash; Willow agent console</span></header>
+<main>
+  <h1>Willow Agent Console</h1>
+  <p class="sub">Performance pay, coaching and job scouting for home-service technicians &mdash; one view for the whole crew.</p>
+  <div class="grid" id="techs"></div>
+  <div class="agent">
+    <h3>Coach Agent &mdash; this week&rsquo;s flag</h3>
+    <p><span class="pill">Callback rate</span><span class="pill">Coaching</span></p>
+    <p id="coachText"></p>
+  </div>
+  <div class="grid" style="margin-top:12px">
+    <div class="card">
+      <h3>Payout simulator</h3>
+      <p style="font-size:14px;color:#94a3b8;margin:0 0 8px">Move the performance bonus and see a technician&rsquo;s monthly payout change instantly.</p>
+      <label style="font-size:14px">Performance bonus: <b id="bonusVal">10%</b></label>
+      <input type="range" id="bonus" min="0" max="25" value="10">
+      <p style="margin:8px 0 0">Monthly payout for <b>Marcus D.</b> (base $6,400): <span class="big" id="payout">$7,040</span></p>
+      <p style="font-size:13px;color:#94a3b8;margin:6px 0 0">Bonus is tied to ticket value and callback rate &mdash; the same levers Willow already tracks.</p>
+    </div>
+    <div class="card">
+      <h3>Job Scout &mdash; new jobs matched</h3>
+      <div class="feed">
+        <div><b>Water heater swap, Austin TX</b> &mdash; $412 ticket, matched to Marcus D. (98% fit)</div>
+        <div><b>Panel upgrade, Round Rock TX</b> &mdash; $1,180 ticket, matched to Priya S. (91% fit)</div>
+        <div><b>AC diagnostic, Cedar Park TX</b> &mdash; $189 ticket, matched to Leo M. (88% fit)</div>
+      </div>
+    </div>
+  </div>
+  <p class="note">Sample data for illustration only &mdash; figures are illustrative, not ShareWillow&rsquo;s real technician data. Concept built by Signhify Studio to show how Willow&rsquo;s agents (Job Scout, Coach, Payout Agent) could sit in one console.</p>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org" target="_blank" rel="noopener">Signhify Studio</a> for ShareWillow. Independent concept &mdash; not affiliated with or endorsed by ShareWillow. Portfolio: <a href="https://piyush-portfolio-ebon.vercel.app" target="_blank" rel="noopener">piyush-portfolio-ebon.vercel.app</a></footer>
+<script>
+const techs = [
+  {name:'Marcus D. — HVAC', jobs:41, ticket:386, callbacks:'6%', earn:7040, cls:'good'},
+  {name:'Priya S. — Electrical', jobs:35, ticket:512, callbacks:'4%', earn:8310, cls:'good'},
+  {name:'Leo M. — Plumbing', jobs:29, ticket:298, callbacks:'19%', earn:5210, cls:'bad'},
+];
+document.getElementById('techs').innerHTML = techs.map(t => `
+  <div class="card"><h3>${t.name}</h3>
+    <div class="stat"><span>Jobs closed (Sep)</span><b>${t.jobs}</b></div>
+    <div class="stat"><span>Avg ticket</span><b>$${t.ticket}</b></div>
+    <div class="stat"><span>Callback rate</span><b class="${t.cls}">${t.callbacks}</b></div>
+    <div class="stat"><span>Paid out (Sep)</span><b>$${t.earn.toLocaleString()}</b></div>
+  </div>`).join('');
+document.getElementById('coachText').textContent =
+  'Leo M.\u2019s callback rate is 19% — 3\u00d7 the crew average. Coach suggests a 15-minute refresher on drain-line diagnostics and a shadow shift with Priya S. If callbacks fall to 8%, his payout rises by about $410/month.';
+const base = 6400, slider = document.getElementById('bonus');
+slider.addEventListener('input', () => {
+  const b = +slider.value;
+  document.getElementById('bonusVal').textContent = b + '%';
+  document.getElementById('payout').textContent = '$' + Math.round(base * (1 + b/100)).toLocaleString();
+});
+</script>
+</body>
+</html>

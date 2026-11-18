@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WoodenStreet — 3D Dining Set Viewer | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#faf6ef;color:#241d14}
+  header{background:#4a2f1d;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header b{font-size:17px} header span{font-size:12px;opacity:.8}
+  main{max-width:980px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px} p.sub{color:#6b5d4c;margin:0 0 14px}
+  #scene{width:100%;height:440px;border-radius:12px;background:#ece4d3;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .panel{background:#fff;border:1px solid #e0d6c2;border-radius:12px;padding:14px;margin-top:14px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{border:1px solid #4a2f1d;background:#fff;color:#4a2f1d;border-radius:999px;padding:8px 14px;cursor:pointer;font-size:14px}
+  .btn.active{background:#4a2f1d;color:#fff}
+  .swatch{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #bbb;cursor:pointer}
+  .swatch.active{box-shadow:0 0 0 2px #4a2f1d}
+  .note{font-size:12px;color:#7a6c58;margin-top:10px}
+  footer{max-width:980px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#7a6c58}
+  a{color:#4a2f1d}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><b>WoodenStreet &times; Signhify Studio</b><span>Concept sample &mdash; 3D dining-set viewer</span></header>
+<main>
+  <h1>See the grain before you buy</h1>
+  <p class="sub">Drag to rotate. Switch the wood finish &mdash; the same solid-wood dining set, four finishes, one 3D scene. WoodenStreet already invests in 3D visualisation for furniture buying; this is that idea, live.</p>
+  <div id="scene"></div>
+  <div class="panel">
+    <div class="row">
+      <span>Wood finish:</span>
+      <button class="swatch active" data-color="0x6b4226" data-name="Sheesham" style="background:#6b4226" title="Sheesham"></button>
+      <button class="swatch" data-color="0x8a5a33" data-name="Mango Wood" style="background:#8a5a33" title="Mango Wood"></button>
+      <button class="swatch" data-color="0x4a3226" data-name="Walnut" style="background:#4a3226" title="Walnut"></button>
+      <button class="swatch" data-color="0x7a5c38" data-name="Teak" style="background:#7a5c38" title="Teak"></button>
+      <span id="woodName">Sheesham</span>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <span>Seats:</span>
+      <button class="btn active" data-seats="4">4-seater</button>
+      <button class="btn" data-seats="6">6-seater</button>
+      <span style="margin-left:auto" id="dims">Table 150 &times; 90 cm &middot; seats 4 &middot; solid wood</span>
+    </div>
+    <p class="note">Concept visualisation with stylised geometry &mdash; not WoodenStreet&rsquo;s product photography. Finish names match the solid woods WoodenStreet sells (sheesham, mango wood, walnut, teak).</p>
+  </div>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org" target="_blank" rel="noopener">Signhify Studio</a> for WoodenStreet. Independent concept &mdash; not affiliated with or endorsed by WoodenStreet. Portfolio: <a href="https://piyush-portfolio-ebon.vercel.app" target="_blank" rel="noopener">piyush-portfolio-ebon.vercel.app</a></footer>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, 440);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xece4d3);
+const camera = new THREE.PerspectiveCamera(42, container.clientWidth/440, 0.1, 100);
+camera.position.set(3.0, 2.2, 3.8);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.55, 0); controls.enableDamping = true; controls.maxPolarAngle = Math.PI/2.05;
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(4, 6, 3); sun.castShadow = true; scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(12,12), new THREE.MeshStandardMaterial({color:0xddd2b8, roughness:1}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+const wood = new THREE.MeshStandardMaterial({ color:0x6b4226, roughness:0.55 });
+const cushion = new THREE.MeshStandardMaterial({ color:0xd8cfc0, roughness:0.95 });
+const set = new THREE.Group(); scene.add(set);
+function box(w,h,d,x,y,z,mat){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; set.add(m); return m;
+}
+function chair(x, z, rotY){
+  const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rotY; set.add(g);
+  const seat = new THREE.Mesh(new THREE.BoxGeometry(0.45,0.07,0.45), cushion);
+  seat.position.y = 0.48; seat.castShadow = true; g.add(seat);
+  const back = new THREE.Mesh(new THREE.BoxGeometry(0.45,0.55,0.06), wood);
+  back.position.set(0, 0.82, -0.21); back.castShadow = true; g.add(back);
+  [[-0.19,-0.19],[0.19,-0.19],[-0.19,0.19],[0.19,0.19]].forEach(([lx,lz]) => {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05,0.48,0.05), wood);
+    leg.position.set(lx, 0.24, lz); leg.castShadow = true; g.add(leg);
+  });
+}
+function build(seats){
+  while (set.children.length) set.remove(set.children[0]);
+  const L = seats === 6 ? 2.1 : 1.5;
+  box(L, 0.07, 0.9, 0, 0.76, 0, wood);                 // tabletop
+  [[-L/2+0.12,-0.36],[L/2-0.12,-0.36],[-L/2+0.12,0.36],[L/2-0.12,0.36]].forEach(([x,z]) => box(0.09,0.74,0.09, x,0.38,z, wood)); // legs
+  box(L-0.2, 0.06, 0.06, 0, 0.18, -0.36, wood);
+  box(L-0.2, 0.06, 0.06, 0, 0.18, 0.36, wood);
+  const xs = seats === 6 ? [-0.7, 0, 0.7] : [-0.4, 0.4];
+  xs.forEach(x => { chair(x, -0.85, 0); chair(x, 0.85, Math.PI); });
+  document.getElementById('dims').textContent =
+    seats === 6 ? 'Table 210 × 90 cm · seats 6 · solid wood' : 'Table 150 × 90 cm · seats 4 · solid wood';
+}
+build(4);
+document.querySelectorAll('[data-seats]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-seats]').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); build(+b.dataset.seats);
+}));
+document.querySelectorAll('.swatch').forEach(s => s.addEventListener('click', () => {
+  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+  s.classList.add('active');
+  wood.color.setHex(parseInt(s.dataset.color));
+  document.getElementById('woodName').textContent = s.dataset.name;
+}));
+function resize(){ const w = container.clientWidth; renderer.setSize(w,440); camera.aspect = w/440; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+(function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); })();
+</script>
+</body>
+</html>
