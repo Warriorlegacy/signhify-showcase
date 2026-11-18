@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Spacewood — Modular Kitchen Configurator | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f5f2ec;color:#211d18}
+  header{background:#3a2f26;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header b{font-size:17px} header span{font-size:12px;opacity:.8}
+  main{max-width:980px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px} p.sub{color:#5a534a;margin:0 0 14px}
+  #scene{width:100%;height:440px;border-radius:12px;background:#e7e0d2;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .panel{background:#fff;border:1px solid #ddd6c8;border-radius:12px;padding:14px;margin-top:14px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{border:1px solid #3a2f26;background:#fff;color:#3a2f26;border-radius:999px;padding:8px 14px;cursor:pointer;font-size:14px}
+  .btn.active{background:#3a2f26;color:#fff}
+  .swatch{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #bbb;cursor:pointer}
+  .swatch.active{box-shadow:0 0 0 2px #3a2f26}
+  .price{font-size:22px;font-weight:700}
+  .note{font-size:12px;color:#6b6357;margin-top:10px}
+  footer{max-width:980px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#6b6357}
+  a{color:#3a2f26}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><b>Spacewood &times; Signhify Studio</b><span>Concept sample &mdash; interactive 3D kitchen configurator</span></header>
+<main>
+  <h1>Design your modular kitchen</h1>
+  <p class="sub">Drag to rotate. Pick a layout and a finish &mdash; the estimate updates live. Spacewood builds modular kitchens, wardrobes and home furniture to order, made in Nagpur.</p>
+  <div id="scene"></div>
+  <div class="panel">
+    <div class="row" id="layouts">
+      <button class="btn active" data-layout="straight">Straight</button>
+      <button class="btn" data-layout="lshape">L-Shape</button>
+      <button class="btn" data-layout="ushape">U-Shape</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <span>Finish:</span>
+      <button class="swatch active" data-color="0xf2f0eb" data-name="Acrylic White" style="background:#f2f0eb" title="Acrylic White"></button>
+      <button class="swatch" data-color="0x6b4a2f" data-name="Walnut" style="background:#6b4a2f" title="Walnut"></button>
+      <button class="swatch" data-color="0x4a4d52" data-name="Slate Grey" style="background:#4a4d52" title="Slate Grey"></button>
+      <button class="swatch" data-color="0x9a6b3f" data-name="Teak" style="background:#9a6b3f" title="Teak"></button>
+      <span id="finishName">Acrylic White</span>
+    </div>
+    <div class="row" style="margin-top:14px;justify-content:space-between">
+      <span>Estimated price <span class="price" id="price">&#8377;1,85,000</span></span>
+      <span id="dims">Straight run &middot; 10 ft &middot; base + wall units</span>
+    </div>
+    <p class="note">Indicative pricing for the concept only. Units shown: base cabinets, wall cabinets, tall pantry unit, countertop, sink and hob &mdash; the same modular system Spacewood manufactures, rendered in real-time 3D at 60 FPS.</p>
+  </div>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org" target="_blank" rel="noopener">Signhify Studio</a> for Spacewood. Independent concept &mdash; not affiliated with or endorsed by Spacewood. Portfolio: <a href="https://piyush-portfolio-ebon.vercel.app" target="_blank" rel="noopener">piyush-portfolio-ebon.vercel.app</a></footer>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, 440);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xe7e0d2);
+const camera = new THREE.PerspectiveCamera(42, container.clientWidth/440, 0.1, 100);
+camera.position.set(4.2, 3.0, 5.0);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.7, 0); controls.enableDamping = true; controls.maxPolarAngle = Math.PI/2.05;
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(4, 6, 3); sun.castShadow = true; scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(14,14), new THREE.MeshStandardMaterial({color:0xd5cdb8, roughness:1}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+const finish = new THREE.MeshStandardMaterial({ color:0xf2f0eb, roughness:0.55 });
+const counterMat = new THREE.MeshStandardMaterial({ color:0x2f2b28, roughness:0.35 });
+const steelMat = new THREE.MeshStandardMaterial({ color:0xb9bec4, roughness:0.25, metalness:0.7 });
+const kitchen = new THREE.Group(); scene.add(kitchen);
+function box(w,h,d,x,y,z,mat){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; kitchen.add(m); return m;
+}
+function run(n, alongX, zOff){
+  // one straight run of n base units + wall units, along X (or Z if alongX false)
+  for (let i=0;i<n;i++){
+    const cx = alongX ? -((n-1)/2)*1.0 + i : 0;
+    const cz = alongX ? zOff : -((n-1)/2)*1.0 + i;
+    const bx = alongX ? cx : zOff, bz = alongX ? zOff : cz;
+    box(0.96,0.85,0.6, bx, 0.45, bz, finish);                 // base cabinet
+    box(0.96,0.05,0.62, bx, 0.90, bz, counterMat);            // countertop
+    box(0.96,0.7,0.35, bx, 1.75, alongX ? zOff-0.14 : bz-0.0, finish); // wall cabinet (offset toward wall)
+    if (alongX) kitchen.children[kitchen.children.length-1].position.z = zOff - 0.14;
+    else kitchen.children[kitchen.children.length-1].position.x = zOff - 0.14;
+  }
+  // sink + hob on the countertop of the middle unit
+  const mx = alongX ? 0 : zOff, mz = alongX ? zOff : 0;
+  box(0.5,0.04,0.4, mx-0.5, 0.94, mz, steelMat);              // sink
+  box(0.5,0.03,0.4, mx+0.5, 0.94, mz, new THREE.MeshStandardMaterial({color:0x1a1a1a, roughness:0.3})); // hob
+  // tall pantry unit at the end
+  const tx = alongX ? -((n-1)/2)*1.0 - 0.75 : zOff - 0.0;
+  const tz = alongX ? zOff : -((n-1)/2)*1.0 - 0.75;
+  box(0.6,2.1,0.6, alongX ? tx : zOff, 1.05, alongX ? zOff : tz, finish);
+}
+const PRICES = {
+  'straight':[185000,'Straight run · 10 ft · base + wall units'],
+  'lshape':[260000,'L-shape · 10 × 8 ft · base + wall units + tall pantry'],
+  'ushape':[340000,'U-shape · 10 × 8 × 10 ft · base + wall units + tall pantry + island counter']
+};
+function build(layout){
+  while (kitchen.children.length) kitchen.remove(kitchen.children[0]);
+  if (layout === 'straight'){ run(4, true, 0); }
+  if (layout === 'lshape'){ run(4, true, 0); run(3, false, -1.9); }
+  if (layout === 'ushape'){
+    run(4, true, 0); run(3, false, -1.9); run(3, false, 1.9);
+    box(1.8,0.9,0.8, 0.6, 0.45, 0, finish);                  // island counter
+    box(1.85,0.05,0.85, 0.6, 0.92, 0, counterMat);
+  }
+  document.getElementById('price').textContent = '\u20B9' + PRICES[layout][0].toLocaleString('en-IN');
+  document.getElementById('dims').textContent = PRICES[layout][1];
+}
+build('straight');
+document.querySelectorAll('#layouts .btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#layouts .btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); build(b.dataset.layout);
+}));
+document.querySelectorAll('.swatch').forEach(s => s.addEventListener('click', () => {
+  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+  s.classList.add('active');
+  finish.color.setHex(parseInt(s.dataset.color));
+  document.getElementById('finishName').textContent = s.dataset.name;
+}));
+function resize(){ const w = container.clientWidth; renderer.setSize(w,440); camera.aspect = w/440; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+(function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); })();
+</script>
+</body>
+</html>

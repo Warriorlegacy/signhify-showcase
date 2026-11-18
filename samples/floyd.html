@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Floyd — Modular Bed Configurator | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f6f3ee;color:#211d18}
+  header{background:#22201d;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header b{font-size:17px} header span{font-size:12px;opacity:.8}
+  main{max-width:980px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px} p.sub{color:#5a534a;margin:0 0 14px}
+  #scene{width:100%;height:440px;border-radius:12px;background:#e8e2d6;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .panel{background:#fff;border:1px solid #ddd6c8;border-radius:12px;padding:14px;margin-top:14px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{border:1px solid #22201d;background:#fff;color:#22201d;border-radius:999px;padding:8px 14px;cursor:pointer;font-size:14px}
+  .btn.active{background:#22201d;color:#fff}
+  .swatch{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #bbb;cursor:pointer}
+  .swatch.active{box-shadow:0 0 0 2px #22201d}
+  .price{font-size:22px;font-weight:700}
+  .note{font-size:12px;color:#6b6357;margin-top:10px}
+  footer{max-width:980px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#6b6357}
+  a{color:#22201d}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><b>Floyd &times; Signhify Studio</b><span>Concept sample &mdash; interactive 3D bed configurator</span></header>
+<main>
+  <h1>One frame. Every size.</h1>
+  <p class="sub">Drag to rotate. Pick a size and a finish &mdash; the price updates live. Floyd&rsquo;s bed frame adjusts from Twin to King, ships flat, and assembles without tools &mdash; made in the USA.</p>
+  <div id="scene"></div>
+  <div class="panel">
+    <div class="row" id="sizes">
+      <button class="btn" data-size="twin">Twin</button>
+      <button class="btn" data-size="full">Full</button>
+      <button class="btn active" data-size="queen">Queen</button>
+      <button class="btn" data-size="king">King</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <span>Finish:</span>
+      <button class="swatch active" data-color="0xc8a878" data-name="Birch" style="background:#c8a878" title="Birch"></button>
+      <button class="swatch" data-color="0x5d4127" data-name="Walnut" style="background:#5d4127" title="Walnut"></button>
+      <button class="swatch" data-color="0xf0ede8" data-name="White" style="background:#f0ede8" title="White"></button>
+      <span id="finishName">Birch</span>
+      <label style="margin-left:auto;font-size:14px"><input type="checkbox" id="headboard" checked> Headboard</label>
+    </div>
+    <div class="row" style="margin-top:14px;justify-content:space-between">
+      <span>Estimated price <span class="price" id="price">$995</span></span>
+      <span id="dims">Queen &middot; 60&quot; &times; 80&quot; &middot; tool-free assembly &middot; flat-pack shipping</span>
+    </div>
+    <p class="note">Indicative pricing for the concept only. The same Floyd frame stretches from Twin to King &mdash; shown here in real-time 3D at 60 FPS, with the headboard, side rails and slats your shoppers would actually configure.</p>
+  </div>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org" target="_blank" rel="noopener">Signhify Studio</a> for Floyd. Independent concept &mdash; not affiliated with or endorsed by Floyd. Portfolio: <a href="https://piyush-portfolio-ebon.vercel.app" target="_blank" rel="noopener">piyush-portfolio-ebon.vercel.app</a></footer>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, 440);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xe8e2d6);
+const camera = new THREE.PerspectiveCamera(42, container.clientWidth/440, 0.1, 100);
+camera.position.set(3.2, 2.4, 4.0);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.45, 0); controls.enableDamping = true; controls.maxPolarAngle = Math.PI/2.05;
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(4, 6, 3); sun.castShadow = true; scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(12,12), new THREE.MeshStandardMaterial({color:0xd8d0bd, roughness:1}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+const frameMat = new THREE.MeshStandardMaterial({ color:0xc8a878, roughness:0.6 });
+const mattressMat = new THREE.MeshStandardMaterial({ color:0xf4f1ea, roughness:0.95 });
+const pillowMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.95 });
+const bed = new THREE.Group(); scene.add(bed);
+function box(w,h,d,x,y,z,mat){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; bed.add(m); return m;
+}
+const SIZES = {
+  'twin':[1.0, 795, 'Twin · 38" × 75" · tool-free assembly · flat-pack shipping'],
+  'full':[1.35, 895, 'Full · 54" × 75" · tool-free assembly · flat-pack shipping'],
+  'queen':[1.55, 995, 'Queen · 60" × 80" · tool-free assembly · flat-pack shipping'],
+  'king':[1.95, 1095, 'King · 76" × 80" · tool-free assembly · flat-pack shipping']
+};
+let currentSize = 'queen';
+function build(){
+  while (bed.children.length) bed.remove(bed.children[0]);
+  const w = SIZES[currentSize][0], L = 2.0;
+  // side rails + head/foot rails
+  box(0.08,0.28, L, -w/2, 0.32, 0, frameMat);
+  box(0.08,0.28, L, w/2, 0.32, 0, frameMat);
+  box(w+0.16,0.28,0.08, 0, 0.32, -L/2, frameMat);
+  box(w+0.16,0.28,0.08, 0, 0.32, L/2, frameMat);
+  // slats
+  for (let i=0;i<7;i++) box(w, 0.04, 0.12, 0, 0.42, -L/2 + 0.2 + i*(L-0.4)/6, frameMat);
+  // legs
+  [[-w/2,-L/2],[w/2,-L/2],[-w/2,L/2],[w/2,L/2]].forEach(([x,z]) => box(0.09,0.18,0.09, x, 0.09, z, frameMat));
+  // mattress + pillows
+  box(w-0.06,0.22, L-0.1, 0, 0.55, 0, mattressMat);
+  const pw = Math.min(0.55, (w-0.2)/2);
+  box(pw,0.12,0.35, -w/4, 0.70, -L/2+0.35, pillowMat);
+  box(pw,0.12,0.35, w/4, 0.70, -L/2+0.35, pillowMat);
+  // headboard
+  if (document.getElementById('headboard').checked){
+    box(w+0.16, 0.85, 0.07, 0, 0.75, -L/2 - 0.06, frameMat);
+  }
+  document.getElementById('price').textContent = '$' + SIZES[currentSize][1].toLocaleString();
+  document.getElementById('dims').textContent = SIZES[currentSize][2];
+}
+build();
+document.querySelectorAll('#sizes .btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#sizes .btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); currentSize = b.dataset.size; build();
+}));
+document.getElementById('headboard').addEventListener('change', build);
+document.querySelectorAll('.swatch').forEach(s => s.addEventListener('click', () => {
+  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+  s.classList.add('active');
+  frameMat.color.setHex(parseInt(s.dataset.color));
+  document.getElementById('finishName').textContent = s.dataset.name;
+}));
+function resize(){ const w = container.clientWidth; renderer.setSize(w,440); camera.aspect = w/440; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+(function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); })();
+</script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Voxelo — 3D Digital Twin Viewer | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f2f4f7;color:#171b22}
+  header{background:#14181f;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header b{font-size:17px} header span{font-size:12px;opacity:.8}
+  main{max-width:980px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px} p.sub{color:#555d6b;margin:0 0 14px}
+  #scene{width:100%;height:440px;border-radius:12px;background:#e3e8ef;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .panel{background:#fff;border:1px solid #d9dee6;border-radius:12px;padding:14px;margin-top:14px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{border:1px solid #14181f;background:#fff;color:#14181f;border-radius:999px;padding:8px 14px;cursor:pointer;font-size:14px}
+  .btn.active{background:#14181f;color:#fff}
+  .swatch{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #bbb;cursor:pointer}
+  .swatch.active{box-shadow:0 0 0 2px #14181f}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .step{background:#f7f8fa;border:1px solid #d9dee6;border-radius:10px;padding:12px;font-size:13px}
+  .step b{display:block;font-size:14px;margin-bottom:4px}
+  .bar{height:8px;background:#e3e8ef;border-radius:99px;overflow:hidden;margin-top:10px}
+  .bar i{display:block;height:100%;width:0%;background:#14181f;border-radius:99px;transition:width .2s}
+  .note{font-size:12px;color:#6b7280;margin-top:10px}
+  footer{max-width:980px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#6b7280}
+  a{color:#14181f}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><b>Voxelo &times; Signhify Studio</b><span>Concept sample &mdash; 3D digital-twin viewer for e-commerce</span></header>
+<main>
+  <h1>One video in. A 3D twin out.</h1>
+  <p class="sub">Drag to rotate the twin. Pick a colourway &mdash; then run the UG3D pipeline below. Voxelo turns a single product video into a production-ready 3D digital twin in about two hours, for web, AR and ads.</p>
+  <div id="scene"></div>
+  <div class="panel">
+    <div class="row" id="colourways">
+      <span>Colourway:</span>
+      <button class="btn active" data-cw="court">Court White</button>
+      <button class="btn" data-cw="volt">Volt</button>
+      <button class="btn" data-cw="midnight">Midnight</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <span>Upper:</span>
+      <button class="swatch active" data-color="0xf5f5f2" data-name="Court White" style="background:#f5f5f2" title="Court White"></button>
+      <button class="swatch" data-color="0xc8e64a" data-name="Volt" style="background:#c8e64a" title="Volt"></button>
+      <button class="swatch" data-color="0x232a3a" data-name="Midnight" style="background:#232a3a" title="Midnight"></button>
+      <span id="cwName">Court White</span>
+      <span style="margin-left:auto">Twin status: <b id="status">Ready &mdash; published to store</b></span>
+    </div>
+    <div class="steps">
+      <div class="step"><b>1 &middot; Upload a video</b>One short product video, shot on a phone. No studio, no scanner.</div>
+      <div class="step"><b>2 &middot; UG3D reconstructs</b>Voxelo&rsquo;s pipeline rebuilds the product as a photorealistic 3D twin in about two hours.</div>
+      <div class="step"><b>3 &middot; Publish everywhere</b>Web viewer, AR try-on, product imagery and ads &mdash; one twin, every channel.</div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="genBtn">Generate a twin from video</button>
+      <span id="genLabel" style="font-size:14px">Try it: simulates the UG3D run on this shoe.</span>
+    </div>
+    <div class="bar"><i id="progress"></i></div>
+    <p class="note">Concept sample only &mdash; the shoe is a placeholder twin built in real-time 3D at 60 FPS. Voxelo&rsquo;s real twins are generated from product video; pricing starts from &pound;50/month. SportsShoes.com, Cosatto and British Attire already use Voxelo twins.</p>
+  </div>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org" target="_blank" rel="noopener">Signhify Studio</a> for Voxelo. Independent concept &mdash; not affiliated with or endorsed by Voxelo. Portfolio: <a href="https://piyush-portfolio-ebon.vercel.app" target="_blank" rel="noopener">piyush-portfolio-ebon.vercel.app</a></footer>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, 440);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xe3e8ef);
+const camera = new THREE.PerspectiveCamera(42, container.clientWidth/440, 0.1, 100);
+camera.position.set(2.6, 1.6, 3.4);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.45, 0); controls.enableDamping = true; controls.maxPolarAngle = Math.PI/2.05;
+scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(4, 6, 3); sun.castShadow = true; scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(12,12), new THREE.MeshStandardMaterial({color:0xd3dae3, roughness:1}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+const upper = new THREE.MeshStandardMaterial({ color:0xf5f5f2, roughness:0.7 });
+const soleMat = new THREE.MeshStandardMaterial({ color:0xffffff, roughness:0.4 });
+const accentMat = new THREE.MeshStandardMaterial({ color:0xc8e64a, roughness:0.5 });
+const shoe = new THREE.Group(); scene.add(shoe);
+function box(w,h,d,x,y,z,mat){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; shoe.add(m); return m;
+}
+// sole
+box(1.05,0.16,2.3, 0, 0.10, 0, soleMat);
+// upper: toe + mid + heel, built from scaled spheres for a shoe-like silhouette
+function blob(sx,sy,sz,x,y,z,mat){
+  const m = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 18), mat);
+  m.scale.set(sx,sy,sz); m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; shoe.add(m); return m;
+}
+blob(0.52,0.28,0.95, 0, 0.30, 0.35, upper);   // toe
+blob(0.50,0.30,0.55, 0, 0.34, -0.55, upper);  // heel
+blob(0.50,0.16,0.9, 0, 0.42, -0.05, upper);   // mid
+// accent stripe along the side
+box(0.03,0.10,1.5, 0.51, 0.32, 0.05, accentMat);
+box(0.03,0.10,1.5, -0.51, 0.32, 0.05, accentMat);
+// laces
+for (let i=0;i<4;i++){
+  const lace = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.7,8), soleMat);
+  lace.rotation.z = Math.PI/2; lace.position.set(0, 0.52, 0.15 - i*0.16);
+  lace.castShadow = true; shoe.add(lace);
+}
+shoe.rotation.y = -0.5;
+const CWS = { 'court':[0xf5f5f2,'Court White',0xc8e64a], 'volt':[0xc8e64a,'Volt',0x232a3a], 'midnight':[0x232a3a,'Midnight',0xc8e64a] };
+document.querySelectorAll('#colourways .btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#colourways .btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  const cw = CWS[b.dataset.cw];
+  upper.color.setHex(cw[0]); accentMat.color.setHex(cw[2]);
+  document.getElementById('cwName').textContent = cw[1];
+  document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('active', s.dataset.name === cw[1]));
+}));
+document.querySelectorAll('.swatch').forEach(s => s.addEventListener('click', () => {
+  upper.color.setHex(parseInt(s.dataset.color));
+  document.getElementById('cwName').textContent = s.dataset.name;
+  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+  s.classList.add('active');
+}));
+let genTimer = null;
+document.getElementById('genBtn').addEventListener('click', () => {
+  if (genTimer) return;
+  const bar = document.getElementById('progress');
+  const label = document.getElementById('genLabel');
+  const status = document.getElementById('status');
+  let p = 0;
+  status.textContent = 'Reconstructing…';
+  genTimer = setInterval(() => {
+    p += 2;
+    bar.style.width = Math.min(p,100) + '%';
+    label.textContent = p < 40 ? 'Reading video frames…' : p < 75 ? 'Rebuilding geometry…' : p < 100 ? 'Texturing and lighting…' : 'Twin ready — published to store, AR and ads.';
+    if (p >= 100){ clearInterval(genTimer); genTimer = null; status.textContent = 'Ready — published to store'; }
+  }, 60);
+});
+function resize(){ const w = container.clientWidth; renderer.setSize(w,440); camera.aspect = w/440; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+(function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); })();
+</script>
+</body>
+</html>

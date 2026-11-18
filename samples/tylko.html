@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tylko — Parametric Shelving Configurator | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f4f1ec;color:#1d1a16}
+  header{background:#2b2b2b;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header b{font-size:17px} header span{font-size:12px;opacity:.8}
+  main{max-width:980px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px} p.sub{color:#5a534a;margin:0 0 14px}
+  #scene{width:100%;height:440px;border-radius:12px;background:#e6e1d6;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+  .panel{background:#fff;border:1px solid #ddd6c8;border-radius:12px;padding:14px;margin-top:14px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{border:1px solid #2b2b2b;background:#fff;color:#2b2b2b;border-radius:999px;padding:8px 14px;cursor:pointer;font-size:14px}
+  .btn.active{background:#2b2b2b;color:#fff}
+  .swatch{width:34px;height:34px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px #bbb;cursor:pointer}
+  .swatch.active{box-shadow:0 0 0 2px #2b2b2b}
+  .price{font-size:22px;font-weight:700}
+  .note{font-size:12px;color:#6b6357;margin-top:10px}
+  input[type=range]{accent-color:#2b2b2b}
+  footer{max-width:980px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#6b6357}
+  a{color:#2b2b2b}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><b>Tylko &times; Signhify Studio</b><span>Concept sample &mdash; parametric shelving configurator, 60 FPS WebGL</span></header>
+<main>
+  <h1>Design shelving that fits your wall exactly</h1>
+  <p class="sub">Drag to rotate. Slide the width and height, pick a colour &mdash; the price updates live. Tylko&rsquo;s made-to-measure shelving is designed online, built to order in Europe, and delivered free.</p>
+  <div id="scene"></div>
+  <div class="panel">
+    <div class="row">
+      <label>Columns <b id="colsVal">3</b> <input type="range" id="cols" min="2" max="5" value="3"></label>
+      <label style="margin-left:12px">Rows <b id="rowsVal">3</b> <input type="range" id="rows" min="2" max="5" value="3"></label>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <span>Colour:</span>
+      <button class="swatch active" data-color="0xf2efe9" data-name="White" style="background:#f2efe9" title="White"></button>
+      <button class="swatch" data-color="0xc9a06a" data-name="Oak" style="background:#c9a06a" title="Oak"></button>
+      <button class="swatch" data-color="0x2b2b2b" data-name="Black" style="background:#2b2b2b" title="Black"></button>
+      <button class="swatch" data-color="0x9caf88" data-name="Sage" style="background:#9caf88" title="Sage"></button>
+      <span id="colourName">White</span>
+      <label style="margin-left:auto;font-size:14px"><input type="checkbox" id="doors"> Add sliding doors (+&euro;120)</label>
+    </div>
+    <div class="row" style="margin-top:14px;justify-content:space-between">
+      <span>Estimated price <span class="price" id="price">&euro;890</span></span>
+      <span id="dims">3 &times; 3 modules &middot; 108 cm wide &middot; 108 cm high &middot; free delivery</span>
+    </div>
+    <p class="note">Indicative pricing for the concept only. Every module is parametric &mdash; the same made-to-order logic Tylko&rsquo;s configurator uses, rendered in real-time 3D at 60 FPS. This sample shows the scene layer Signhify builds white-label for configurator teams: fast, embeddable, and ready for new lines like wardrobes and TV stands.</p>
+  </div>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org" target="_blank" rel="noopener">Signhify Studio</a> for Tylko. Independent concept &mdash; not affiliated with or endorsed by Tylko. Portfolio: <a href="https://piyush-portfolio-ebon.vercel.app" target="_blank" rel="noopener">piyush-portfolio-ebon.vercel.app</a></footer>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, 440);
+renderer.shadowMap.enabled = true;
+container.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xe6e1d6);
+const camera = new THREE.PerspectiveCamera(42, container.clientWidth/440, 0.1, 100);
+camera.position.set(2.8, 2.0, 3.6);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.8, 0); controls.enableDamping = true; controls.maxPolarAngle = Math.PI/2.05;
+scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+const sun = new THREE.DirectionalLight(0xffffff, 1.4);
+sun.position.set(4, 6, 3); sun.castShadow = true; scene.add(sun);
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(12,12), new THREE.MeshStandardMaterial({color:0xd6cfbe, roughness:1}));
+floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+const shelfMat = new THREE.MeshStandardMaterial({ color:0xf2efe9, roughness:0.6 });
+const backMat = new THREE.MeshStandardMaterial({ color:0xe0dbd0, roughness:0.9 });
+const unit = new THREE.Group(); scene.add(unit);
+function box(w,h,d,x,y,z,mat){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
+  m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true; unit.add(m); return m;
+}
+const CELL = 0.36, T = 0.03;
+function build(){
+  while (unit.children.length) unit.remove(unit.children[0]);
+  const cols = parseInt(document.getElementById('cols').value);
+  const rows = parseInt(document.getElementById('rows').value);
+  const W = cols*CELL, H = rows*CELL;
+  // back panel
+  box(W, H, 0.02, 0, H/2, -0.17, backMat);
+  // side panels + shelves + dividers
+  box(T, H, CELL, -W/2 + T/2, H/2, 0, shelfMat);
+  box(T, H, CELL, W/2 - T/2, H/2, 0, shelfMat);
+  box(W, T, CELL, 0, H - T/2, 0, shelfMat);
+  box(W, T, CELL, 0, T/2, 0, shelfMat);
+  for (let r=1;r<rows;r++) box(W - 2*T, T, CELL, 0, r*CELL, 0, shelfMat);
+  for (let c=1;c<cols;c++) box(T, H - 2*T, CELL, -W/2 + c*CELL, H/2, 0, shelfMat);
+  // a few books / boxes for life
+  const bookCols = [0xb4654a, 0x4a5d4e, 0x3a3a3a, 0xc9a06a];
+  for (let i=0;i<cols*2;i++){
+    const cx = -W/2 + (i%cols)*CELL + CELL/2;
+    const ry = Math.floor(i/cols) % rows;
+    box(0.05, 0.22, 0.2, cx - 0.08 + (i%3)*0.05, ry*CELL + 0.14, 0.02, new THREE.MeshStandardMaterial({color:bookCols[i%4], roughness:0.8}));
+  }
+  if (document.getElementById('doors').checked){
+    box(W/2, H - 0.06, 0.02, -W/4, H/2, 0.19, shelfMat);
+    box(W/2, H - 0.06, 0.02, W/4, H/2, 0.20, shelfMat);
+  }
+  const modules = cols*rows;
+  let price = 290 + modules*65;
+  if (document.getElementById('doors').checked) price += 120;
+  document.getElementById('price').textContent = '\u20AC' + price.toLocaleString('en-IE');
+  document.getElementById('dims').textContent = cols + ' × ' + rows + ' modules · ' + Math.round(W*100) + ' cm wide · ' + Math.round(H*100) + ' cm high · free delivery';
+  document.getElementById('colsVal').textContent = cols;
+  document.getElementById('rowsVal').textContent = rows;
+}
+document.getElementById('cols').addEventListener('input', build);
+document.getElementById('rows').addEventListener('input', build);
+document.getElementById('doors').addEventListener('change', build);
+document.querySelectorAll('.swatch').forEach(s => s.addEventListener('click', () => {
+  document.querySelectorAll('.swatch').forEach(x => x.classList.remove('active'));
+  s.classList.add('active');
+  shelfMat.color.setHex(parseInt(s.dataset.color));
+  document.getElementById('colourName').textContent = s.dataset.name;
+}));
+build();
+function resize(){ const w = container.clientWidth; renderer.setSize(w,440); camera.aspect = w/440; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+(function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); })();
+</script>
+</body>
+</html>

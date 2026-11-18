@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amira Learning — AI Reading Tutor + Teacher Dashboard | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f2f5f9;color:#1b2432}
+  header{background:#173a5e;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header b{font-size:17px} header span{font-size:12px;opacity:.8}
+  main{max-width:980px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px} p.sub{color:#556274;margin:0 0 14px}
+  .panel{background:#fff;border:1px solid #d7dee8;border-radius:12px;padding:14px;margin-top:14px}
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .card{border:1px solid #d7dee8;border-radius:10px;padding:12px;font-size:13px;background:#fbfcfe}
+  .card b{font-size:15px}
+  .metric{font-size:22px;font-weight:700;margin:6px 0 2px}
+  .bar{height:8px;background:#e3e9f0;border-radius:99px;overflow:hidden;margin:6px 0}
+  .bar i{display:block;height:100%;background:#173a5e;border-radius:99px}
+  .passage{font-size:19px;line-height:2.1;background:#fbfcfe;border:1px solid #d7dee8;border-radius:10px;padding:14px 16px;margin-top:10px}
+  .word{cursor:pointer;border-radius:6px;padding:2px 4px}
+  .word:hover{background:#dbe7f5}
+  .word.miscue{background:#fde8e8;text-decoration:underline dotted #c0392b}
+  .word.correct{background:#e6f4ea}
+  .tutor{border-left:4px solid #173a5e;background:#eef4fa;border-radius:0 10px 10px 0;padding:12px 14px;margin-top:12px;font-size:14px}
+  .tutor b{color:#173a5e}
+  .q{margin-top:10px;font-size:14px}
+  .q button{border:1px solid #173a5e;background:#fff;color:#173a5e;border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13px;margin:2px}
+  .q button.active{background:#173a5e;color:#fff}
+  .trend{display:flex;align-items:flex-end;gap:8px;height:90px;margin-top:10px}
+  .trend div{flex:1;background:#173a5e;border-radius:6px 6px 0 0;opacity:.85;text-align:center;color:#fff;font-size:11px;padding-top:4px}
+  .note{font-size:12px;color:#6b7686;margin-top:10px}
+  footer{max-width:980px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#6b7686}
+  a{color:#173a5e}
+</style>
+</head>
+<body>
+<header><b>Amira Learning &times; Signhify Studio</b><span>Concept sample &mdash; AI reading tutor + teacher dashboard</span></header>
+<main>
+  <h1>Every child reads aloud. Amira listens.</h1>
+  <p class="sub">A teacher dashboard over Amira&rsquo;s AI reading assessment and tutoring &mdash; fluency, accuracy and comprehension for a class, with a live 1:1 tutor session. All figures below are sample data, labelled as such.</p>
+  <div class="panel">
+    <b>Class snapshot &mdash; Grade 3, sample data</b>
+    <div class="cards" style="margin-top:10px">
+      <div class="card"><b>Maya R.</b><br>Level M &middot; 3rd grade<div class="metric">92 WCPM</div>words correct per minute<div class="bar"><i style="width:92%"></i></div>Accuracy 94% &middot; up 6 pts this month</div>
+      <div class="card"><b>Jordan T.</b><br>Level P &middot; 4th grade<div class="metric">118 WCPM</div>words correct per minute<div class="bar"><i style="width:89%"></i></div>Accuracy 89% &middot; tutor flagged 3 miscues today</div>
+      <div class="card"><b>Sofia L.</b><br>Level J &middot; 2nd grade<div class="metric">64 WCPM</div>words correct per minute<div class="bar"><i style="width:91%"></i></div>Accuracy 91% &middot; ready for the next level</div>
+    </div>
+    <p class="note">WCPM = words correct per minute, the standard fluency measure Amira tracks. Amira&rsquo;s models are trained on 10,000+ hours of children reading aloud in real classrooms.</p>
+  </div>
+  <div class="panel">
+    <b>Live tutor session &mdash; Maya reads aloud</b>
+    <p class="sub" style="margin-top:6px">Click any word to see what the tutor heard. Underlined words are miscues Amira caught.</p>
+    <div class="passage" id="passage">The <span class="word miscue" data-fb="Amira heard &lsquo;sheep&rsquo;. Sound it out together: sh&ndash;i&ndash;p. The <i>ship</i> sails on the sea.">ship</span> <span class="word" data-fb="Read cleanly &mdash; no correction needed.">sailed</span> <span class="word" data-fb="Read cleanly &mdash; no correction needed.">across</span> the <span class="word" data-fb="Read cleanly &mdash; no correction needed.">wide</span> <span class="word miscue" data-fb="Amira heard &lsquo;see&rsquo;. Look at the ending: s&ndash;e&ndash;a spells <i>sea</i>, the ocean.">sea</span>, <span class="word" data-fb="Read cleanly &mdash; no correction needed.">past</span> the <span class="word" data-fb="Read cleanly &mdash; no correction needed.">lighthouse</span> and <span class="word miscue" data-fb="Amira heard &lsquo;home&rsquo;. The word is <i>home</i>? No &mdash; it is <i>home</i> spelled h&ndash;o&ndash;m&ndash;e, but here the word is <i>foam</i>: f&ndash;o&ndash;a&ndash;m, the bubbles on the waves.">foam</span>.</div>
+    <div class="tutor" id="tutorBox"><b>Amira tutor:</b> <span id="tutorText">Maya is reading now. Click a word in the passage and I&rsquo;ll show what I heard and how I&rsquo;d coach it &mdash; in the moment, not after the lesson.</span></div>
+    <div class="q"><b>Comprehension check</b> (scripted demo &mdash; click an answer):<br>
+      <span>Where did the ship sail?</span><br>
+      <button data-a="right">Across the wide sea, past the lighthouse</button>
+      <button data-a="wrong">Across the desert</button>
+      <button data-a="wrong">Into the harbour at night</button>
+      <div id="qFb" style="margin-top:8px;font-size:13px;color:#173a5e"></div>
+    </div>
+  </div>
+  <div class="panel">
+    <b>Maya&rsquo;s fluency trend &mdash; WCPM by week (sample data)</b>
+    <div class="trend">
+      <div style="height:55%">74</div><div style="height:62%">79</div><div style="height:68%">84</div><div style="height:74%">86</div><div style="height:82%">90</div><div style="height:92%">92</div>
+    </div>
+    <p class="note">Six weeks of Amira tutoring, 30 minutes a week. The dashboard flags the exact words and sounds each student still misses, so the teacher&rsquo;s next lesson targets them &mdash; the module Signhify builds white-label for reading platforms: tutor panels, fluency analytics and teacher dashboards.</p>
+  </div>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org" target="_blank" rel="noopener">Signhify Studio</a> for Amira Learning. Independent concept &mdash; not affiliated with or endorsed by Amira Learning. All student names and figures are sample data. Portfolio: <a href="https://piyush-portfolio-ebon.vercel.app" target="_blank" rel="noopener">piyush-portfolio-ebon.vercel.app</a></footer>
+<script>
+document.querySelectorAll('#passage .word').forEach(w => w.addEventListener('click', () => {
+  document.querySelectorAll('#passage .word').forEach(x => x.classList.remove('correct'));
+  if (!w.classList.contains('miscue')) w.classList.add('correct');
+  document.getElementById('tutorText').innerHTML = w.dataset.fb;
+}));
+document.querySelectorAll('.q button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.q button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('qFb').textContent = b.dataset.a === 'right'
+    ? 'Correct. Amira logs the comprehension win and moves Maya to the next passage.'
+    : 'Not quite — Amira re-reads the sentence with Maya and asks again, instead of just marking it wrong.';
+}));
+</script>
+</body>
+</html>
