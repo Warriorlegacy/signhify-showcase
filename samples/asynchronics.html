@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asynchronics — NeXosim Satellite Twin Viewer | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0b0e14;color:#e8ecf3}
+  header{background:#11151d;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header b{font-size:17px} header span{font-size:12px;opacity:.8}
+  main{max-width:980px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px} p.sub{color:#9aa4b5;margin:0 0 14px}
+  #scene{width:100%;height:440px;border-radius:12px;background:#05070c;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  .panel{background:#151a23;border:1px solid #262d3a;border-radius:12px;padding:14px;margin-top:14px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .btn{border:1px solid #4a5568;background:#1b212c;color:#e8ecf3;border-radius:999px;padding:8px 14px;cursor:pointer;font-size:14px}
+  .btn.active{background:#e8ecf3;color:#11151d}
+  .btn.primary{background:#3b82f6;border-color:#3b82f6;color:#fff}
+  .telemetry{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+  .tile{background:#0f131b;border:1px solid #262d3a;border-radius:10px;padding:12px;font-size:13px}
+  .tile b{display:block;font-size:19px;margin-top:2px}
+  .tile span{color:#9aa4b5;font-size:12px}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .step{background:#0f131b;border:1px solid #262d3a;border-radius:10px;padding:12px;font-size:13px}
+  .step b{display:block;font-size:14px;margin-bottom:4px}
+  .bar{height:8px;background:#0f131b;border:1px solid #262d3a;border-radius:99px;overflow:hidden;margin-top:10px}
+  .bar i{display:block;height:100%;width:0%;background:#3b82f6;border-radius:99px;transition:width .2s}
+  .note{font-size:12px;color:#8b96a8;margin-top:10px}
+  footer{max-width:980px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#8b96a8}
+  a{color:#93c5fd}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><b>Asynchronics &times; Signhify Studio</b><span>Concept sample &mdash; browser viewer for a NeXosim satellite digital twin</span></header>
+<main>
+  <h1>One twin in the catalogue. A live satellite in the browser.</h1>
+  <p class="sub">Drag to orbit the twin. Pick a catalogue twin, then run the simulation-environment builder below. NeXosim is Asynchronics&rsquo; marketplace for spacecraft digital twins &mdash; four in the catalogue today, fifty planned within two years.</p>
+  <div id="scene"></div>
+  <div class="panel">
+    <div class="row" id="twins">
+      <span>Catalogue twin:</span>
+      <button class="btn active" data-twin="leo">LEO Imaging Bus</button>
+      <button class="btn" data-twin="comms">Comms Relay</button>
+      <button class="btn" data-twin="cubesat">3U CubeSat</button>
+      <button class="btn" data-twin="geo">GEO Platform</button>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="orbitBtn">Pause orbit</button>
+      <span id="twinName" style="font-size:14px">LEO Imaging Bus &mdash; 550 km sun-synchronous orbit</span>
+      <span style="margin-left:auto;font-size:14px">Twin status: <b id="status">Live &mdash; telemetry streaming</b></span>
+    </div>
+    <div class="telemetry">
+      <div class="tile"><span>Altitude</span><b id="alt">550.2 km</b></div>
+      <div class="tile"><span>Velocity</span><b id="vel">7.59 km/s</b></div>
+      <div class="tile"><span>Battery</span><b id="bat">87%</b></div>
+      <div class="tile"><span>Bus temperature</span><b id="temp">21.4 &deg;C</b></div>
+    </div>
+    <div class="steps">
+      <div class="step"><b>1 &middot; Pick a twin</b>Choose from the NeXosim catalogue &mdash; each twin ships with its real hardware data and flight model.</div>
+      <div class="step"><b>2 &middot; Build the environment</b>A graphical interface assembles the simulation: orbit, ground stations, payloads and failure cases.</div>
+      <div class="step"><b>3 &middot; Run it in the browser</b>Engineers test mission scenarios on the twin before touching hardware &mdash; no install, 60 FPS WebGL.</div>
+    </div>
+    <div class="row" style="margin-top:14px">
+      <button class="btn" id="buildBtn">Build a simulation environment</button>
+      <span id="buildLabel" style="font-size:14px">Try it: assembles a NeXosim environment around this twin.</span>
+    </div>
+    <div class="bar"><i id="progress"></i></div>
+    <p class="note">Concept sample only &mdash; the satellite is a placeholder twin rendered in real-time 3D at 60 FPS. Asynchronics raised a $3.1M seed round led by b2venture (announced 17 November 2026) to grow the NeXosim marketplace and build the graphical interface for simulation environments. Real twin data stays with Asynchronics.</p>
+  </div>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org" target="_blank" rel="noopener">Signhify Studio</a> for Asynchronics. Independent concept &mdash; not affiliated with or endorsed by Asynchronics. Portfolio: <a href="https://piyush-portfolio-ebon.vercel.app" target="_blank" rel="noopener">piyush-portfolio-ebon.vercel.app</a></footer>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, 440);
+container.appendChild(renderer.domElement);
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x05070c);
+const camera = new THREE.PerspectiveCamera(45, container.clientWidth/440, 0.1, 200);
+camera.position.set(5.5, 3.2, 6.5);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.minDistance = 3; controls.maxDistance = 18;
+scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(6, 8, 4); scene.add(sun);
+// starfield
+const starGeo = new THREE.BufferGeometry();
+const starPos = [];
+for (let i=0;i<900;i++){
+  const r = 40 + Math.random()*40, t = Math.random()*Math.PI*2, p = Math.acos(2*Math.random()-1);
+  starPos.push(r*Math.sin(p)*Math.cos(t), r*Math.cos(p), r*Math.sin(p)*Math.sin(t));
+}
+starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color:0xffffff, size:0.14 })));
+// Earth below
+const earth = new THREE.Mesh(new THREE.SphereGeometry(9, 48, 32),
+  new THREE.MeshStandardMaterial({ color:0x1d4e89, roughness:0.9, metalness:0.05 }));
+earth.position.set(0, -12.4, 0); scene.add(earth);
+const atmo = new THREE.Mesh(new THREE.SphereGeometry(9.35, 48, 32),
+  new THREE.MeshBasicMaterial({ color:0x3b82f6, transparent:true, opacity:0.18 }));
+atmo.position.copy(earth.position); scene.add(atmo);
+// orbit ring
+const ring = new THREE.Mesh(new THREE.TorusGeometry(3.4, 0.012, 8, 128),
+  new THREE.MeshBasicMaterial({ color:0x3b82f6, transparent:true, opacity:0.55 }));
+ring.rotation.x = Math.PI/2.15; scene.add(ring);
+// satellite
+const sat = new THREE.Group(); scene.add(sat);
+const busMat = new THREE.MeshStandardMaterial({ color:0xc7ccd6, roughness:0.35, metalness:0.7 });
+const panelMat = new THREE.MeshStandardMaterial({ color:0x1e40af, roughness:0.25, metalness:0.6 });
+const goldMat = new THREE.MeshStandardMaterial({ color:0xd4a017, roughness:0.3, metalness:0.8 });
+const bus = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 1.1), busMat);
+bus.castShadow = true; sat.add(bus);
+const panelGeo = new THREE.BoxGeometry(1.7, 0.04, 0.85);
+const panelL = new THREE.Mesh(panelGeo, panelMat); panelL.position.x = -1.25; sat.add(panelL);
+const panelR = new THREE.Mesh(panelGeo, panelMat); panelR.position.x = 1.25; sat.add(panelR);
+const dish = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.35, 24, 1, true), goldMat);
+dish.position.set(0, 0.5, -0.2); dish.rotation.x = Math.PI; sat.add(dish);
+const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 8), busMat);
+mast.position.set(0, 0.35, 0.3); sat.add(mast);
+const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.12, 24),
+  new THREE.MeshStandardMaterial({ color:0x0b1220, roughness:0.15, metalness:0.4 }));
+lens.rotation.x = Math.PI/2; lens.position.set(0, 0, 0.6); sat.add(lens);
+const orbitGroup = new THREE.Group(); orbitGroup.add(sat); scene.add(orbitGroup);
+let orbiting = true, angle = 0.6;
+function placeSat(){
+  const a = angle, R = 3.4;
+  sat.position.set(Math.cos(a)*R, Math.sin(a)*R*0.32, Math.sin(a)*R);
+  sat.rotation.y = -a; sat.rotation.z = 0.12;
+}
+placeSat();
+const TWINS = {
+  leo:   ['LEO Imaging Bus \u2014 550 km sun-synchronous orbit', 550.2, 7.59, 87, 21.4, 0x1e40af],
+  comms: ['Comms Relay \u2014 1,200 km low Earth orbit', 1200.5, 7.26, 74, 18.9, 0x0e7490],
+  cubesat:['3U CubeSat \u2014 420 km low Earth orbit', 420.1, 7.66, 92, 24.1, 0x7c3aed],
+  geo:   ['GEO Platform \u2014 35,786 km geostationary orbit', 35786.0, 3.07, 68, 16.2, 0x166534]
+};
+document.querySelectorAll('#twins .btn').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#twins .btn').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  const t = TWINS[b.dataset.twin];
+  document.getElementById('twinName').textContent = t[0];
+  document.getElementById('alt').textContent = t[1].toLocaleString('en-US', {minimumFractionDigits:1}) + ' km';
+  document.getElementById('vel').textContent = t[2].toFixed(2) + ' km/s';
+  document.getElementById('bat').textContent = t[3] + '%';
+  document.getElementById('temp').textContent = t[4].toFixed(1) + ' \u00B0C';
+  panelMat.color.setHex(t[5]);
+  document.getElementById('status').textContent = 'Live \u2014 telemetry streaming';
+}));
+document.getElementById('orbitBtn').addEventListener('click', (e) => {
+  orbiting = !orbiting;
+  e.target.textContent = orbiting ? 'Pause orbit' : 'Resume orbit';
+});
+let buildTimer = null;
+document.getElementById('buildBtn').addEventListener('click', () => {
+  if (buildTimer) return;
+  const bar = document.getElementById('progress');
+  const label = document.getElementById('buildLabel');
+  const status = document.getElementById('status');
+  let p = 0;
+  status.textContent = 'Building environment\u2026';
+  buildTimer = setInterval(() => {
+    p += 2;
+    bar.style.width = Math.min(p,100) + '%';
+    label.textContent = p < 35 ? 'Importing twin and flight model\u2026' : p < 65 ? 'Placing ground stations and orbit\u2026' : p < 90 ? 'Attaching payload and failure cases\u2026' : 'Environment ready \u2014 run the mission scenario.';
+    if (p >= 100){ clearInterval(buildTimer); buildTimer = null; status.textContent = 'Live \u2014 environment ready'; }
+  }, 60);
+});
+// live telemetry drift
+setInterval(() => {
+  const alt = document.getElementById('alt');
+  const v = parseFloat(alt.textContent.replace(/,/g,'')) + (Math.random()-0.5)*0.04;
+  alt.textContent = v.toLocaleString('en-US', {minimumFractionDigits:1, maximumFractionDigits:1}) + ' km';
+  const t = document.getElementById('temp');
+  const tv = parseFloat(t.textContent) + (Math.random()-0.5)*0.1;
+  t.textContent = tv.toFixed(1) + ' \u00B0C';
+}, 1500);
+function resize(){ const w = container.clientWidth; renderer.setSize(w,440); camera.aspect = w/440; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+(function animate(){
+  requestAnimationFrame(animate);
+  if (orbiting){ angle += 0.0016; placeSat(); }
+  earth.rotation.y += 0.0004;
+  controls.update(); renderer.render(scene, camera);
+})();
+</script>
+</body>
+</html>
