@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Medaica — AI Triage + Clinician Dashboard | Signhify Studio sample</title>
+<style>
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#0d1b1e;color:#e9f2f0}
+  header{background:#07332e;color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+  header b{font-size:17px} header span{font-size:12px;opacity:.8}
+  main{max-width:980px;margin:0 auto;padding:18px}
+  h1{font-size:22px;margin:6px 0 2px} p.sub{color:#a8c4bd;margin:0 0 14px}
+  #scene{width:100%;height:360px;border-radius:12px;background:#122a28;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+  #ecg{width:100%;height:120px;border-radius:12px;background:#0a1f1d;display:block;margin-top:12px;border:1px solid #23534c}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+  @media (max-width:640px){.grid{grid-template-columns:1fr}}
+  .panel{background:#14302c;border:1px solid #23534c;border-radius:12px;padding:14px}
+  .panel h3{margin:0 0 8px;font-size:15px}
+  .hot{border:1px solid #3fc1a5;background:transparent;color:#8fe3cf;border-radius:999px;padding:7px 12px;cursor:pointer;font-size:13px;margin:0 6px 6px 0}
+  .hot.active{background:#3fc1a5;color:#07332e}
+  label{display:block;font-size:13px;margin:10px 0 4px;color:#c3d9d3}
+  input[type=range]{width:100%}
+  .kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+  .kpi{background:#0d2421;border:1px solid #23534c;border-radius:8px;padding:10px}
+  .kpi b{font-size:20px;display:block;color:#5fd6b6}
+  .kpi b.warn{color:#ffb454}
+  .kpi b.alert{color:#ff7a6b}
+  .kpi span{font-size:12px;color:#a8c4bd}
+  #inspect{font-size:14px;line-height:1.5}
+  .note{font-size:12px;color:#7ba398;margin-top:10px}
+  footer{max-width:980px;margin:0 auto;padding:0 18px 24px;font-size:12px;color:#7ba398}
+  a{color:#5fd6b6}
+</style>
+<script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+<header><b>Medaica &times; Signhify Studio</b><span>Concept sample &mdash; AI triage + clinician dashboard for Telehealth 2.0</span></header>
+<main>
+  <h1>A virtual visit where the exam room comes to the patient</h1>
+  <p class="sub">Drag to rotate. Move the sliders and the live vitals, ECG trace and AI triage score update in real time &mdash; the same loop Medaica&rsquo;s FDA-cleared M1 stethoscope feeds into Telehealth 2.0 virtual visits.</p>
+  <div id="scene"></div>
+  <canvas id="ecg" width="940" height="120"></canvas>
+  <div class="grid">
+    <div class="panel">
+      <h3>Run a virtual visit</h3>
+      <label>Heart rate &mdash; <span id="hrVal">72</span> bpm</label>
+      <input id="hr" type="range" min="40" max="140" value="72" step="1">
+      <label>Blood oxygen (SpO<sub>2</sub>) &mdash; <span id="spo2Val">98</span>%</label>
+      <input id="spo2" type="range" min="88" max="100" value="98" step="1">
+      <label>Respiratory rate &mdash; <span id="rrVal">14</span> /min</label>
+      <input id="rr" type="range" min="8" max="30" value="14" step="1">
+      <label>Visit stage</label>
+      <button class="hot active" data-stage="intake">Intake</button>
+      <button class="hot" data-stage="auscultation">Auscultation</button>
+      <button class="hot" data-stage="triage">AI triage</button>
+      <button class="hot" data-stage="review">Clinician review</button>
+      <p class="note">The triage score is a simple rules demo on the three vitals above &mdash; a real module would fuse the M1 audio stream, history and clinician rules. Figures here are illustrative.</p>
+    </div>
+    <div class="panel">
+      <h3>Live vitals &amp; triage</h3>
+      <div class="kpis">
+        <div class="kpi"><b id="kHr">72 bpm</b><span>Heart rate</span></div>
+        <div class="kpi"><b id="kSpo2">98%</b><span>SpO<sub>2</sub></span></div>
+        <div class="kpi"><b id="kRr">14 /min</b><span>Respiratory rate</span></div>
+        <div class="kpi"><b id="kTriage">Routine</b><span>AI triage</span></div>
+      </div>
+      <p id="inspect" style="margin-top:12px">Vitals are within normal ranges. The visit can proceed as a routine Telehealth 2.0 consultation.</p>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="panel">
+      <h3>Inspect the visit</h3>
+      <button class="hot active" data-item="m1">M1 stethoscope</button>
+      <button class="hot" data-item="visit">Telehealth 2.0 visit</button>
+      <button class="hot" data-item="triage">AI triage</button>
+      <button class="hot" data-item="dashboard">Clinician dashboard</button>
+      <p id="detail" style="font-size:14px;line-height:1.5">The M1 is Medaica&rsquo;s FDA-cleared telehealth stethoscope (February 2025): a clinician listens remotely while the device streams heart and lung sounds into the virtual visit.</p>
+    </div>
+    <div class="panel">
+      <h3>Why live vitals change triage</h3>
+      <p style="font-size:14px;line-height:1.5;margin:0">A static intake form cannot hear a murmur or catch falling oxygen. Streaming the M1 audio and vitals into one dashboard lets the AI flag the patients who need a clinician now &mdash; and lets the clinician trust the flag, because the trace behind it is right there on screen.</p>
+    </div>
+  </div>
+</main>
+<footer>Concept sample built by <a href="https://signhify.dpdns.org">Signhify Studio</a> &mdash; white-label 60 FPS WebGL scenes and custom AI modules, fixed quote. Not affiliated with Medaica; figures are illustrative.</footer>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const wrap = document.getElementById('scene');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x122a28);
+scene.fog = new THREE.Fog(0x122a28, 16, 38);
+const camera = new THREE.PerspectiveCamera(45, wrap.clientWidth / 360, 0.1, 100);
+camera.position.set(7, 5, 9);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(wrap.clientWidth, 360);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+wrap.appendChild(renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.maxPolarAngle = Math.PI / 2.1;
+controls.target.set(0, 0.8, 0);
+scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+const key = new THREE.DirectionalLight(0xfff2cc, 1.5); key.position.set(6, 10, 4); scene.add(key);
+
+// Desk
+const desk = new THREE.Mesh(new THREE.BoxGeometry(12, 0.3, 7), new THREE.MeshStandardMaterial({ color: 0x1d4038, roughness: 0.8 }));
+desk.position.set(0, -0.15, 0); scene.add(desk);
+
+// M1 stethoscope: chestpiece (torus + disc), curved tube, earpieces
+const steel = new THREE.MeshStandardMaterial({ color: 0xcfe3ea, metalness: 0.85, roughness: 0.25 });
+const tubeMat = new THREE.MeshStandardMaterial({ color: 0x3fc1a5, roughness: 0.45 });
+const chest = new THREE.Group();
+const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.14, 16, 40), steel);
+ring.rotation.x = Math.PI / 2; chest.add(ring);
+const diaphragm = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.5, 0.1, 32), new THREE.MeshStandardMaterial({ color: 0x243b36, metalness: 0.4, roughness: 0.4 }));
+chest.add(diaphragm);
+chest.position.set(-2.6, 0.25, 0.6); scene.add(chest);
+const tubeCurve = new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-2.6, 0.3, 0.6), new THREE.Vector3(-1.2, 0.35, 1.8),
+  new THREE.Vector3(0.6, 0.35, 1.9), new THREE.Vector3(2.2, 0.5, 0.9),
+  new THREE.Vector3(2.6, 0.9, -0.2), new THREE.Vector3(2.4, 1.5, -1.2)
+]);
+const tube = new THREE.Mesh(new THREE.TubeGeometry(tubeCurve, 48, 0.11, 10), tubeMat);
+scene.add(tube);
+const earL = new THREE.Mesh(new THREE.SphereGeometry(0.16, 16, 12), steel);
+earL.position.set(2.4, 1.55, -1.2); scene.add(earL);
+const earR = earL.clone(); earR.position.set(2.75, 1.35, -1.35); scene.add(earR);
+
+// Vitals monitor: stand + screen with a glowing trace line
+const monitor = new THREE.Group();
+const screen = new THREE.Mesh(new THREE.BoxGeometry(3.4, 2.1, 0.12), new THREE.MeshStandardMaterial({ color: 0x0a1f1d }));
+screen.position.set(0, 2.1, 0); monitor.add(screen);
+const glow = new THREE.Mesh(new THREE.PlaneGeometry(3.1, 1.8), new THREE.MeshBasicMaterial({ color: 0x0f3a33 }));
+glow.position.set(0, 2.1, 0.07); monitor.add(glow);
+const stand = new THREE.Mesh(new THREE.BoxGeometry(0.25, 1.1, 0.25), new THREE.MeshStandardMaterial({ color: 0x2a4a43 }));
+stand.position.set(0, 0.55, 0); monitor.add(stand);
+const base = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.12, 0.7), new THREE.MeshStandardMaterial({ color: 0x2a4a43 }));
+base.position.set(0, 0.06, 0); monitor.add(base);
+monitor.position.set(1.2, 0, -2.2); scene.add(monitor);
+
+// Pulsing ring on the monitor = live heartbeat
+const pulse = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.05, 10, 40), new THREE.MeshBasicMaterial({ color: 0x5fd6b6 }));
+pulse.position.set(1.2, 2.1, -2.1); scene.add(pulse);
+
+// --- Vitals + triage logic ---
+const $ = id => document.getElementById(id);
+const hrIn = $('hr'), spo2In = $('spo2'), rrIn = $('rr');
+function triage(hr, spo2, rr) {
+  let score = 0;
+  if (hr < 50 || hr > 110) score += 2; else if (hr < 60 || hr > 100) score += 1;
+  if (spo2 < 92) score += 2; else if (spo2 < 95) score += 1;
+  if (rr < 10 || rr > 24) score += 2; else if (rr < 12 || rr > 20) score += 1;
+  if (score >= 4) return ['Escalate', 'alert', 'Two or more vitals are outside safe ranges. The AI flags this visit for immediate clinician attention.'];
+  if (score >= 2) return ['Review soon', 'warn', 'One vital is drifting out of range. The AI recommends a clinician review before the visit ends.'];
+  return ['Routine', '', 'Vitals are within normal ranges. The visit can proceed as a routine Telehealth 2.0 consultation.'];
+}
+function refresh() {
+  const hr = +hrIn.value, spo2 = +spo2In.value, rr = +rrIn.value;
+  $('hrVal').textContent = hr; $('spo2Val').textContent = spo2; $('rrVal').textContent = rr;
+  $('kHr').textContent = hr + ' bpm';
+  $('kSpo2').textContent = spo2 + '%';
+  $('kRr').textContent = rr + ' /min';
+  const [label, cls, msg] = triage(hr, spo2, rr);
+  const k = $('kTriage'); k.textContent = label; k.className = cls;
+  $('inspect').textContent = msg;
+  $('kHr').className = (hr < 50 || hr > 110) ? 'alert' : (hr < 60 || hr > 100) ? 'warn' : '';
+  $('kSpo2').className = spo2 < 92 ? 'alert' : spo2 < 95 ? 'warn' : '';
+  $('kRr').className = (rr < 10 || rr > 24) ? 'alert' : (rr < 12 || rr > 20) ? 'warn' : '';
+}
+[hrIn, spo2In, rrIn].forEach(el => el.addEventListener('input', refresh));
+const stages = {
+  intake: 'Intake captures history and symptoms first, so the AI has context before any vital is measured.',
+  auscultation: 'Auscultation is where the M1 earns its place: heart and lung sounds stream live to the clinician, inside the same visit window.',
+  triage: 'AI triage weighs the live vitals and the M1 audio together, then ranks the visit Routine, Review soon or Escalate.',
+  review: 'Clinician review shows the full picture at once: vitals, ECG trace, M1 audio and the triage reasoning, with one-click escalation.'
+};
+document.querySelectorAll('[data-stage]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-stage]').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); $('inspect').textContent = stages[b.dataset.stage];
+}));
+const details = {
+  m1: 'The M1 is Medaica\u2019s FDA-cleared telehealth stethoscope (February 2025): a clinician listens remotely while the device streams heart and lung sounds into the virtual visit.',
+  visit: 'Telehealth 2.0, backed by Zoom Ventures\u2019 strategic investment announced 12 November 2026, connects medical devices, AI and real-time diagnostics inside virtual visits.',
+  triage: 'AI triage turns a stream of vitals and stethoscope audio into a ranked queue, so clinicians spend their minutes where they change outcomes.',
+  dashboard: 'The clinician dashboard is one screen per patient: live vitals, ECG trace, M1 audio playback and the triage flag, with notes and escalation in the same view.'
+};
+document.querySelectorAll('[data-item]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-item]').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); $('detail').textContent = details[b.dataset.item];
+}));
+refresh();
+
+// --- ECG trace on 2D canvas, rate follows the heart-rate slider ---
+const ecg = $('ecg'), ectx = ecg.getContext('2d');
+function ecgY(t) {
+  // One stylised heartbeat per cycle: P wave, QRS spike, T wave
+  const p = (t % 1 + 1) % 1;
+  if (p < 0.12) return 0.12 * Math.sin(p / 0.12 * Math.PI);
+  if (p < 0.18) return -0.15 * Math.sin((p - 0.12) / 0.06 * Math.PI);
+  if (p < 0.26) return Math.sin((p - 0.18) / 0.08 * Math.PI);
+  if (p < 0.45) return 0.28 * Math.sin((p - 0.26) / 0.19 * Math.PI);
+  return 0;
+}
+let ecgStart = performance.now();
+function drawEcg(now) {
+  const W = ecg.width, H = ecg.height, mid = H * 0.55;
+  ectx.clearRect(0, 0, W, H);
+  ectx.strokeStyle = 'rgba(95,214,182,0.12)';
+  ectx.lineWidth = 1;
+  for (let x = 0; x < W; x += 47) { ectx.beginPath(); ectx.moveTo(x, 0); ectx.lineTo(x, H); ectx.stroke(); }
+  for (let y = 0; y < H; y += 24) { ectx.beginPath(); ectx.moveTo(0, y); ectx.lineTo(W, y); ectx.stroke(); }
+  const hr = +hrIn.value, period = 60000 / hr;
+  const span = 4000; // 4 seconds visible
+  ectx.strokeStyle = '#5fd6b6'; ectx.lineWidth = 2; ectx.beginPath();
+  for (let x = 0; x <= W; x += 2) {
+    const t = (now - ecgStart - (W - x) / W * span) / period;
+    const y = mid - ecgY(t) * H * 0.55;
+    x === 0 ? ectx.moveTo(x, y) : ectx.lineTo(x, y);
+  }
+  ectx.stroke();
+  requestAnimationFrame(drawEcg);
+}
+requestAnimationFrame(drawEcg);
+
+// --- 3D render loop ---
+let last = performance.now();
+function step(now) {
+  const dt = Math.min((now - last) / 1000, 0.1); last = now;
+  const hr = +hrIn.value;
+  const beat = (now % (60000 / hr)) / (60000 / hr);
+  const s = 1 + 0.25 * Math.max(0, Math.sin(beat * Math.PI * 2)) * Math.exp(-beat * 4);
+  pulse.scale.set(s, s, 1);
+  pulse.material.color.setHex(hr > 110 || hr < 50 ? 0xff7a6b : 0x5fd6b6);
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(step);
+}
+requestAnimationFrame(step);
+addEventListener('resize', () => {
+  camera.aspect = wrap.clientWidth / 360; camera.updateProjectionMatrix();
+  renderer.setSize(wrap.clientWidth, 360);
+});
+</script>
+</body>
+</html>
